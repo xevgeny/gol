@@ -111,14 +111,20 @@ void printinfo(WINDOW *infow, int it) {
     }
 }
 
-int main(int argc, char **argv) {
-    static char *usage = "Usage: %s [-n] [-s] [-d ms] file.cells\n";
-    int opt;
+void printusage(char *name) {
+    fprintf(stderr, "Usage: %s [args] file.cells\n", name);
+    fprintf(stderr, "  -n       no wrap\n");
+    fprintf(stderr, "  -s       step mode\n");
+    fprintf(stderr, "  -d ms    delay in ms\n");
+}
 
+int main(int argc, char **argv) {
     GRID_WRAP = TRUE;
     GRID_MODE = GRID_MODE_AUTO;
     DELAY_MS = 50;
-    
+
+    int opt;
+
     while ((opt = getopt(argc, argv, "nsd:")) != -1) {
         switch (opt) {
         case 'n':
@@ -131,13 +137,13 @@ int main(int argc, char **argv) {
             DELAY_MS = atoi(optarg);
             break;
         default:
-            fprintf(stderr, usage, argv[0]);
+            printusage(argv[0]);
             exit(EXIT_FAILURE);
         }
     }
 
     if (optind >= argc) {
-        fprintf(stderr, usage, argv[0]);
+        printusage(argv[0]);
         exit(EXIT_FAILURE);
     }
 
