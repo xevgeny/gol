@@ -162,7 +162,7 @@ int main(int argc, char **argv) {
     WINDOW *gridw, *infow;
     refresh(); // draw root window first
     gridw = newwin(GRID_H, 2*GRID_W, 1, 1);
-    infow = newwin(2, GRID_W + 2, GRID_H + 2, 1);
+    infow = newwin(2, 2*GRID_W, GRID_H + 2, 1);
 
     char grid[GRID_H][GRID_W];
     memset(grid, 0, sizeof grid);
