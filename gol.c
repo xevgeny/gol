@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <locale.h>
 #include <ncurses.h>
 #include <string.h>
@@ -9,9 +10,14 @@
 #define DEAD_CELL '.'
 #define LIVE_CELL 'O'
 
+#define GRID_MODE_AUTO 0
+#define GRID_MODE_STEP 1
+
 int GRID_H;
 int GRID_W;
 int GRID_WRAP;
+int GRID_MODE;
+int DELAY_MS;
 
 void loadcells(char *fname, char grid[GRID_H][GRID_W]) {
     FILE *fp;
@@ -95,11 +101,48 @@ void printinfo(WINDOW *infow, int it) {
     snprintf(s, SIZE_COL, "%d", it);
     mvwaddstr(infow, 1, 0, s);
 
-    mvwaddstr(infow, 0, SIZE_COL + 1, "---- ms");
-    mvwaddstr(infow, 1, SIZE_COL + 1, "STEP");
+    if (GRID_MODE == GRID_MODE_AUTO) {
+        snprintf(s, SIZE_COL, "%4d ms", DELAY_MS);
+        mvwaddstr(infow, 0, SIZE_COL + 1, s);
+        mvwaddstr(infow, 1, SIZE_COL + 1, "AUTO");
+    } else {
+        mvwaddstr(infow, 0, SIZE_COL + 1, "---- ms");
+        mvwaddstr(infow, 1, SIZE_COL + 1, "STEP");
+    }
 }
 
-int main() {
+int main(int argc, char **argv) {
+    static char *usage = "Usage: %s [-n] [-s] [-d ms] file.cells\n";
+    int opt;
+
+    GRID_WRAP = TRUE;
+    GRID_MODE = GRID_MODE_AUTO;
+    DELAY_MS = 50;
+    
+    while ((opt = getopt(argc, argv, "nsd:")) != -1) {
+        switch (opt) {
+        case 'n':
+            GRID_WRAP = FALSE;
+            break;
+        case 's':
+            GRID_MODE = GRID_MODE_STEP;
+            break;
+        case 'd':
+            DELAY_MS = atoi(optarg);
+            break;
+        default:
+            fprintf(stderr, usage, argv[0]);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if (optind >= argc) {
+        fprintf(stderr, usage, argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    char *fname = argv[optind];
+
     setlocale(LC_ALL, "");
     initscr();
     noecho();
@@ -110,9 +153,6 @@ int main() {
 
     GRID_H = screen_h - 5;
     GRID_W = screen_w - 2;
-    GRID_WRAP = 1;
-
-    char *fname = "./frothingpuffer.cells";
 
     WINDOW *gridw, *infow;
     refresh(); // draw root window first
@@ -123,6 +163,7 @@ int main() {
     memset(grid, 0, sizeof grid);
     loadcells(fname, grid);
 
+    // print filename and no wrap flag once
     mvwaddstr(infow, 0, 2*(SIZE_COL + 1), fname);
     if (!GRID_WRAP)
         mvwaddstr(infow, 1, 2*(SIZE_COL + 1), "*");
@@ -135,7 +176,11 @@ int main() {
         printinfo(infow, it++);
         wrefresh(infow);
 
-        getch();
+        if (GRID_MODE == GRID_MODE_AUTO)
+            usleep(DELAY_MS * 1e3);
+        else 
+            getch();
+
         evolve(grid);
     }
 
