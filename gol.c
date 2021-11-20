@@ -157,7 +157,7 @@ int main(int argc, char **argv) {
     getmaxyx(stdscr, screen_h, screen_w);
 
     GRID_H = screen_h - 5;
-    GRID_W = screen_w - 2;
+    GRID_W = (screen_w - 2)/2;
 
     WINDOW *gridw, *infow;
     refresh(); // draw root window first
