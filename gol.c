@@ -13,11 +13,10 @@
 #define GRID_MODE_AUTO 0
 #define GRID_MODE_STEP 1
 
-int GRID_H;
-int GRID_W;
-int GRID_WRAP;
-int GRID_MODE;
-int DELAY_MS;
+int GRID_H, GRID_W;
+int GRID_WRAP = TRUE;
+int GRID_MODE = GRID_MODE_AUTO;
+int DELAY_MS  = 50;
 
 void loadcells(char *fname, char grid[GRID_H][GRID_W]) {
     FILE *fp;
@@ -119,10 +118,6 @@ void printusage(char *name) {
 }
 
 int main(int argc, char **argv) {
-    GRID_WRAP = TRUE;
-    GRID_MODE = GRID_MODE_AUTO;
-    DELAY_MS = 50;
-
     int opt;
 
     while ((opt = getopt(argc, argv, "nsd:")) != -1) {
@@ -148,6 +143,10 @@ int main(int argc, char **argv) {
     }
 
     char *fname = argv[optind];
+    if (access(fname, F_OK ) != 0) {
+        fprintf(stderr, "File not found: %s\n", fname);
+        exit(EXIT_FAILURE);
+    }
 
     setlocale(LC_ALL, "");
     initscr();
